@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Upload New Document - SecureDocs{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <h2 class="mb-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-cloud-arrow-up-fill me-2" viewBox="0 0 16 16">
+                            <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2z"/>
+                        </svg>
+                        Upload New Document
+                    </h2>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <p class="text-muted text-center mb-4">
+                        Select a document to securely upload. Your file will be encrypted and digitally signed.
+                    </p>
+                    <form method="POST" action="{{ url_for('upload_document') }}" enctype="multipart/form-data" id="uploadForm">
+                        <div class="mb-4">
+                            <label for="file" class="form-label fs-5">Choose File</label>
+                            <input type="file" class="form-control form-control-lg" id="file" name="file" required>
+                            <div id="fileHelp" class="form-text mt-2">
+                                Allowed file types: PDF, DOCX, TXT. <br>
+                                Max size: (Consider setting a server-side limit and displaying it here, e.g., 10MB).
+                            </div>
+                            <div class="invalid-feedback" id="fileError">
+                                Please select a valid file type.
+                            </div>
+                        </div>
+                        
+                        {# Placeholder for future options if needed, like choosing encryption level or specific signing cert #}
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-success btn-lg" id="uploadButton">
+                                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true" id="uploadSpinner"></span>
+                                Upload and Secure
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted text-center py-3">
+                    <small>Your documents are protected with end-to-end security measures.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('file');
+    const uploadButton = document.getElementById('uploadButton');
+    const uploadSpinner = document.getElementById('uploadSpinner');
+    const fileError = document.getElementById('fileError'); // For custom file type error
+
+    const allowedExtensions = ['pdf', 'docx', 'txt']; // Keep in sync with backend
+
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function(event) {
+            let isValid = true;
+            // Basic client-side validation for file type
+            if (fileInput.files.length > 0) {
+                const fileName = fileInput.files[0].name;
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+                if (!allowedExtensions.includes(fileExtension)) {
+                    fileInput.classList.add('is-invalid');
+                    if(fileError) fileError.style.display = 'block'; // Show custom error message
+                    isValid = false;
+                    event.preventDefault(); // Stop form submission
+                } else {
+                    fileInput.classList.remove('is-invalid');
+                    if(fileError) fileError.style.display = 'none'; // Hide error message
+                }
+            } else { // No file selected, but 'required' attribute should handle this
+                fileInput.classList.add('is-invalid');
+                 if(fileError) fileError.textContent = 'Please select a file.';
+                 if(fileError) fileError.style.display = 'block';
+                isValid = false;
+                event.preventDefault();
+            }
+
+            if (isValid && uploadButton && uploadSpinner) {
+                uploadButton.disabled = true;
+                uploadSpinner.classList.remove('d-none');
+                uploadButton.querySelector('span:not(.spinner-border)').textContent = ' Uploading...';
+            }
+        });
+    }
+
+    // Optional: Clear validation on file change
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            fileInput.classList.remove('is-invalid');
+            if(fileError) fileError.style.display = 'none';
+        });
+    }
+});
+</script>
+{% endblock %}

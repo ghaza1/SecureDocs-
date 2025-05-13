@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Internal Server Error - SecureDocs{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="card shadow-lg border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h1 class="display-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-exclamation-octagon-fill me-3" viewBox="0 0 16 16">
+                          <path d="M11.46.146A.5.5 0 0 0 11.107 0H4.893a.5.5 0 0 0-.353.146L.146 4.54A.5.5 0 0 0 0 4.893v6.214a.5.5 0 0 0 .146.353l4.394 4.394a.5.5 0 0 0 .353.146h6.214a.5.5 0 0 0 .353-.146l4.394-4.394a.5.5 0 0 0 .146-.353V4.893a.5.5 0 0 0-.146-.353L11.46.146zM8 4c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 4zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                        </svg>
+                        Error 500
+                    </h1>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="card-title">Internal Server Error</h2>
+                    <p class="lead">We're sorry, but something went wrong on our end.</p>
+                    <p>Our team has been notified, and we're working to fix it as soon as possible.</p>
+                    {% if error %}
+                        <p class="text-muted small mt-4">Error details (for debugging): <br><code>{{ error | e }}</code></p>
+                    {% endif %}
+                    <hr class="my-4">
+                    <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house-door-fill me-2" viewBox="0 0 16 16">
+                          <path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5z"/>
+                        </svg>
+                        Go to Homepage
+                    </a>
+                </div>
+                <div class="card-footer text-muted">
+                    Please try again later.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

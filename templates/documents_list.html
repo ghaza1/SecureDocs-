@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}My Documents - SecureDocs{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h2 class="mb-2 mb-md-0">{% if current_user.role == 'admin' %}All Documents{% else %}My Documents{% endif %}</h2>
+        <a href="{{ url_for('upload_document') }}" class="btn btn-success btn-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cloud-arrow-up-fill me-2" viewBox="0 0 16 16">
+                <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2z"/>
+            </svg>Upload New Document
+        </a>
+    </div>
+
+    {% if documents %}
+    <div class="card shadow-sm">
+        <div class="card-body p-0"> {# Remove padding from card-body to let table be full-width #}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0 align-middle"> {# mb-0 to remove bottom margin from table #}
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col" class="text-center">#</th>
+                            <th scope="col">Filename</th>
+                            <th scope="col" class="text-nowrap">Orig. Size</th>
+                            <th scope="col">Type</th>
+                            <th scope="col" class="text-center">Encrypted</th>
+                            <th scope="col" class="text-center">Signed</th>
+                            <th scope="col" class="text-nowrap">Upload Date</th>
+                            <th scope="col" class="text-nowrap">SHA-256 (Original)</th>
+                            {% if current_user.role == 'admin' %}
+                            <th scope="col">Owner</th>
+                            {% endif %}
+                            <th scope="col" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documents %}
+                        <tr>
+                            <td class="text-center">{{ loop.index }}</td>
+                            <td style="word-break: break-all;">{{ doc.filename }}</td>
+                            <td class="text-nowrap">{{ (doc.filesize / 1024)|round(2) }} KB</td>
+                            <td><span class="badge bg-secondary">{{ doc.filetype.upper() if doc.filetype else 'N/A' }}</span></td>
+                            <td class="text-center">
+                                {% if doc.is_encrypted %}
+                                    <span class="badge bg-success" title="AES-256 Encrypted">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center"> 
+                                {% if doc.digital_signature %}
+                                    <span class="badge bg-primary" title="Digitally Signed">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-nowrap">{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td title="{{ doc.sha256_hash }}">
+                                <small><code>{{ doc.sha256_hash[:10] if doc.sha256_hash else 'N/A' }}...</code></small>
+                            </td>
+                            {% if current_user.role == 'admin' %}
+                            <td class="text-nowrap">{{ doc.owner.email }}</td>
+                            {% endif %}
+                            <td class="text-center text-nowrap">
+                                <a href="{{ url_for('download_document', document_id=doc.id) }}" class="btn btn-sm btn-outline-primary me-1 download-link" title="Download">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                    </svg>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_document', document_id=doc.id) }}" style="display: inline;" class="delete-form">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Document">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                            <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center py-4" role="alert">
+        <h4 class="alert-heading">No Documents Yet!</h4>
+        <p>You haven't uploaded any documents. Why not secure your first file now?</p>
+        <hr>
+        <p class="mb-0">
+            <a href="{{ url_for('upload_document') }}" class="btn btn-lg btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-file-earmark-arrow-up-fill me-2" viewBox="0 0 16 16">
+                  <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0M9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1M6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.207V12.5a.5.5 0 0 1-1 0V8.207z"/>
+                </svg>Upload Your First Document
+            </a>
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // JavaScript for download link flash messages (from previous step)
+    const downloadLinks = document.querySelectorAll('.download-link');
+    const flashMessageArea = document.getElementById('flash-message-area');
+
+    if (!flashMessageArea) {
+        console.error('Flash message area (id="flash-message-area") not found in base.html.');
+    } else {
+        downloadLinks.forEach(link => {
+            link.addEventListener('click', function (event) {
+                console.log('Download link clicked. Attempting to refresh flash messages soon.');
+                setTimeout(function() {
+                    const fetchUrl = window.location.href.split('?')[0] + '?t=' + new Date().getTime();
+                    console.log('Fetching URL for flash messages:', fetchUrl);
+                    fetch(fetchUrl, { cache: 'no-store' })
+                        .then(response => {
+                            if (!response.ok) { throw new Error('Network response was not ok: ' + response.statusText); }
+                            return response.text();
+                        })
+                        .then(html => {
+                            console.log('Successfully fetched new page content for flash.');
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newFlashMessagesContainer = doc.getElementById('flash-message-area');
+                            if (newFlashMessagesContainer) {
+                                flashMessageArea.innerHTML = newFlashMessagesContainer.innerHTML;
+                            } else {
+                                flashMessageArea.innerHTML = ''; 
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching or processing updated flash messages:', error);
+                        });
+                }, 1000);
+            });
+        });
+    }
+
+    // JavaScript for delete confirmation
+    const deleteForms = document.querySelectorAll('.delete-form');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(event) {
+            const filename = this.closest('tr').querySelector('td:nth-child(2)').textContent.trim(); // Get filename from table row
+            const confirmation = confirm(`Are you sure you want to delete the document "${filename}"? This action cannot be undone.`);
+            if (!confirmation) {
+                event.preventDefault(); // Stop form submission if user cancels
+            }
+            // If confirmed, the form will submit as usual.
+            // Backend will handle actual deletion and flash messages.
+        });
+    });
+});
+</script>
+{% endblock %}
